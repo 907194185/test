@@ -15,7 +15,6 @@ public class InstitutionFilterUtils {
 	public static int filter(InterfaceList interfaceList, Map<String, Object> param,UserCacheDao userCacheDao){
 		if (interfaceList.getAction().equalsIgnoreCase("list") || interfaceList.getAction().equalsIgnoreCase("link")) {
 
-
 			List<Map<String,Object>> param_obj = null; //界面传来的obj参数
 			UserCache userCache = userCacheDao.findUserByToken(param.get("token").toString());
 			List<Map<String, Object>> roles = (List<Map<String, Object>>) userCache.getCache().get("roles"); //用户角色
