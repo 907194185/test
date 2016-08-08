@@ -4,6 +4,8 @@ package com.gykj.controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.Resource;
+
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,8 +13,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.gykj.Constant;
+import com.gykj.dao.UserCacheDao;
 import com.gykj.interceptor.AuthPassport;
+import com.gykj.pojo.InterfaceGroup;
 import com.gykj.pojo.User;
+import com.gykj.pojo.UserCache;
 import com.gykj.service.UserService;
 import com.gykj.utils.BeanUtils;
 import com.gykj.utils.JsonUtils;
@@ -28,7 +33,8 @@ import com.gykj.utils.JsonUtils;
 @RestController
 @RequestMapping("/user")
 public class UserController extends BaseControllerByCRUD<UserService, User>{	
-	
+	@Resource
+	private UserCacheDao userCacheDao;
 	
 
 	@RequestMapping(value="/list", method={RequestMethod.POST, RequestMethod.GET})
@@ -185,7 +191,30 @@ public class UserController extends BaseControllerByCRUD<UserService, User>{
 		return getBaseData(code, "登录成功", map);
 	} 
 	
-	
+	@RequestMapping(value="/getUserByOpenid", method={RequestMethod.POST, RequestMethod.GET})
+	public Map<String, Object> getUserByOpenid(String openid){
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("openid", openid);
+		UserCache userCache = userCacheDao.findUserByOpenid(openid);
+		Map<String, Object> pojo;
+		if (userCache != null) {
+			pojo = getBaseData(null, null, userCache);
+		} else {
+			pojo = getBaseData(Constant.RETURN_CODE_FAIL, null, null);
+		}
+		return pojo;
+	}
 
+	@RequestMapping(value="/editOpenid", method={RequestMethod.POST, RequestMethod.GET})
+	public Map<String, Object> editOpenid(String openid){
+		int code = Constant.RETURN_CODE_FAIL;
+		try {
+			code = userCacheDao.loginOut(openid) 
+					? Constant.RETURN_CODE_SUCCESS 
+							: Constant.RETURN_CODE_FAIL;
+		} catch (Exception e) {
+		}
+		return getBaseData(code, null, null);
+	}
 	
 }

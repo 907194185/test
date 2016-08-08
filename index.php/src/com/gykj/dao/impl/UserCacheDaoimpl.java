@@ -53,6 +53,25 @@ public class UserCacheDaoimpl extends MongoDaoimpl<UserCache> implements UserCac
 		params.put("ig_name", ig_name);
 		return find(params);
 	}
+
+	@Override
+	public UserCache findUserByOpenid(String openid) {
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("openid", openid);
+		return find(params);
+	}
+
+	@Override
+	public boolean loginOut(String openid) {
+		// TODO Auto-generated method stub
+		UserCache userCache = findUserByOpenid(openid);
+		if (userCache==null) {
+			return false;
+		}
+		userCache.setOpenid("");
+		update(userCache);
+		return true;
+	}
 	
 	
 	

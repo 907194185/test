@@ -24,5 +24,14 @@ public interface UserCacheDao extends BaseDao<UserCache>{
 	 * @return 
 	 */
 	public UserCache findUserByToken(String token);
+	
+	/**
+	 * 根据token查找user
+	 * @param token
+	 * @return 
+	 */
+	public UserCache findUserByOpenid(String openid);
+	
+	public boolean loginOut(String openid);
 
 }

@@ -2,7 +2,9 @@ package com.gykj.controller;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -10,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,9 +21,13 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.gykj.Constant;
 import com.gykj.dao.UserCacheDao;
+import com.gykj.pojo.InterfaceList;
+import com.gykj.pojo.Log;
 import com.gykj.pojo.UserCache;
+import com.gykj.service.impl.InformationService;
 import com.gykj.utils.HttpUtils;
 import com.gykj.utils.JsonUtils;
+import com.gykj.utils.WxUtils;
 
 
 
@@ -34,12 +41,15 @@ import com.gykj.utils.JsonUtils;
 @RestController
 @RequestMapping("/weixin")
 public class WeiXinController{
-	private final String APPID = "wxa2f25b03890baa58";//微信APPID  wx1db4c9335d280036
-	private final String SECRET = "fbac8252cec573748f80613a06ec627f";//微信APPSECRET 95dffc454b7177ae2d759af33aa6b636
+	private final String APPID = "";//微信APPID  wx1db4c9335d280036
+	private final String SECRET = "";//微信APPSECRET 95dffc454b7177ae2d759af33aa6b636
 	private final String SCOPE = "snsapi_base";//静默授权
 	private Logger logger = Logger.getLogger(WeiXinController.class);
 	@Resource
 	private UserCacheDao userCacheDao;
+
+	@Resource
+	private InformationService informationService;
 
 	//http://192.168.1.140:8080/gykj/weixin/information/4945f9a9-5f59-4c99-b720-3d5f8c4e370f/user/edit?openid=sdfs&obj=json[{}]
 	@RequestMapping(value="/{controller}/{token}/{collection}/{action}", method={RequestMethod.POST, RequestMethod.GET})
@@ -94,7 +104,7 @@ public class WeiXinController{
 			String REDIRECT_URI = callBackUrl;
 			logger.info("回调地址："+REDIRECT_URI);
 			String URL_CODE = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=1#wechat_redirect";
-			URL_CODE = URL_CODE.replaceFirst("APPID", APPID).replaceFirst("REDIRECT_URI", REDIRECT_URI).replaceFirst("SCOPE", SCOPE);
+			URL_CODE = URL_CODE.replaceFirst("APPID", WxUtils.getPropertyValue("appId")).replaceFirst("REDIRECT_URI", REDIRECT_URI).replaceFirst("SCOPE", SCOPE);
 			//请求
 			response.sendRedirect(URL_CODE);
 			return;
@@ -103,7 +113,7 @@ public class WeiXinController{
 		logger.info("------code=="+code);
 		//如果有code，则获取openid
 		String URL_OPENID = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code";
-		URL_OPENID = URL_OPENID.replaceFirst("APPID", APPID).replaceFirst("SECRET", SECRET).replaceFirst("CODE", code);
+		URL_OPENID = URL_OPENID.replaceFirst("APPID", WxUtils.getPropertyValue("appId")).replaceFirst("SECRET", WxUtils.getPropertyValue("appsecret")).replaceFirst("CODE", code);
 		logger.info("------URL_OPENID=="+URL_OPENID);
 		String json=HttpUtils.execute(URL_OPENID);
 		logger.info("token=="+json);
@@ -122,6 +132,60 @@ public class WeiXinController{
 	public String validation(@RequestParam Map<String, Object> param) {
 		System.out.println("-param-"+param);
 		return "validation OK";
+	}
+
+	@RequestMapping(value={"/upload/{token}/{collection}/{action}"}, method={org.springframework.web.bind.annotation.RequestMethod.POST, org.springframework.web.bind.annotation.RequestMethod.GET})
+	public Callable<Map<String, Object>> wxData(@PathVariable String collection, @PathVariable String action, @PathVariable String token, @RequestParam Map<String, Object> param, HttpServletRequest request)
+	{
+		Log log = new Log();
+		InterfaceList interfaceList = this.informationService.getInterfaceList(collection, action, token, log);
+		String obj = (String)param.get("obj");
+		String usertoken = (String)param.get("token");
+		List objObject = (List)JsonUtils.toObject(obj, List.class);
+		if ((objObject == null) || (objObject.isEmpty())) {
+			return getError("上传记录为空");
+		}
+		Map map = (Map)objObject.get(0);
+		List<String> imgUrlList = (List)map.get("img_url");
+		String basePath = WxUtils.getPropertyValue("public_image_url");
+		if ((basePath == null) || (basePath.trim().length() == 0)) {
+			return getError("图片保存路径不能为空");
+		}
+		StringBuffer imageNameList = new StringBuffer();
+		if (imgUrlList != null) {
+			for (String imgUrl : imgUrlList)
+			{
+				String locaPath = WxUtils.urlDownload(imgUrl, basePath + "/" + imgUrl + ".jpg");
+				if (locaPath == null) {
+					return getError("保存图片失败");
+				}
+				imageNameList.append(locaPath.substring(locaPath.lastIndexOf("/") + 1) + ",");
+			}
+		}
+		map.remove("img_url");
+		map.put("filename", imageNameList.length() == 0 ? "" : imageNameList.substring(0, imageNameList.length() - 1));
+		map.put("filepath", basePath);
+		objObject.clear();
+		objObject.add(map);
+		param.put("obj", JsonUtils.toJson(objObject));
+		param.put("token", usertoken);
+		return informationService.requestTCP(interfaceList, param, log);
+	}
+
+	private Callable<Map<String, Object>> getError(final String errorMessage)
+	{
+		new Callable()
+	    {
+	      public Map<String, Object> call()
+	        throws Exception
+	      {
+	        Map<String, Object> param = new HashMap();
+	        param.put("code", "0001");
+	        param.put("message", errorMessage);
+	        return param;
+	      }
+	    };
+	    return null;
 	}
 
 }

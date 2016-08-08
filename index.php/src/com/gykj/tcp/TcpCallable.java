@@ -105,7 +105,7 @@ public class TcpCallable implements  Callable<Map<String, Object>>,TCPClienListe
 		//获取taskType
 		Integer taskType = (Integer) param.remove("taskType");
 		if(taskType == null) taskType = 1;
-
+		String openid = null;
 		//组装tackJson
 		if(Constant.FIELD_USER_LOGIN.equals(interfaceList.getAction()) 
 				|| "link".equalsIgnoreCase(interfaceList.getAction())){
@@ -117,6 +117,11 @@ public class TcpCallable implements  Callable<Map<String, Object>>,TCPClienListe
 			for (Map<String, Object> map : param_obj) {
 				if (map.containsKey("password")) {
 					map.put("password",DigestUtils.md5FromString(map.get("password").toString()));
+				} 
+				if (map.containsKey("openid") && map.get("openid")!=null) {
+					openid = (String) map.get("openid");
+					map.remove("openid");
+					
 				}
 			}
 			param = TaskJsonUtils.joinContent(interfaceList.getCollection(), "list", param);
@@ -170,7 +175,7 @@ public class TcpCallable implements  Callable<Map<String, Object>>,TCPClienListe
 					userCache.setLogin_time(DateTimeUtil.getCurrenteDate());
 					userCache.setCache(TaskJsonUtils.getModel(result));
 					//先获取openid,使用微信的时候会有值的
-					Object openid = param.get(Constant.FIELD_WX_OPENID);				
+					//Object openid = param.get(Constant.FIELD_WX_OPENID);				
 					if(openid != null) userCache.setOpenid(openid.toString());
 					//更新
 					userCacheDao.update(userCache);
