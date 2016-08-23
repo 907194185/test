@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ly.mapper.WeChatUserMapper">
+
+	<select id="findUserByOpenid" parameterType="String"
+		resultType="com.ly.pojo.wechat.WeChatUserInfo">
+		SELECT * FROM wechat_userinfo WHERE openid = #{openid}
+	</select>
+
+	<insert id="insertUser" parameterType="com.ly.pojo.wechat.WeChatUserInfo">
+		INSERT INTO
+		wechat_userinfo
+		(openid,nickname,subscribe,sex,language,country
+		,province,city,headimgurl,subscribe_time,unionid,remark,groupid)
+		VALUE
+		(#{openid},#{nickname},#{subscribe},#{sex},#{language},#{country},#{province},#{city},#{headimgurl},#{subscribe_time},
+		#{unionid},#{remark},#{groupid})
+	</insert>
+
+	<update id="updateUser" parameterType="com.ly.pojo.wechat.WeChatUserInfo">
+		UPDATE wechat_userinfo SET
+		nickname=#{nickname},subscribe=#{subscribe},sex=#{sex},language=#{language},country=#{country}
+		,province=#{province},city=#{city},headimgurl=#{headimgurl},subscribe_time=#{subscribe_time},unionid=#{unionid},remark=#{remark},groupid=#{groupid}
+		WHERE openid =#{openid}
+	</update>
+</mapper>

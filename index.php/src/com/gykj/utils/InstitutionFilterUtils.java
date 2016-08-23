@@ -212,9 +212,12 @@ public class InstitutionFilterUtils {
 					param_obj.add(0, temp);
 					param.put("obj", JsonUtils.toJson(param_obj));
 					if (temp.containsKey("level") && !interfaceList.getAction().equalsIgnoreCase("link")) {
-						operation = new HashMap<String, Object>();
-						operation.put("level", "gte");
-						param.put("operation", JsonUtils.toJson(operation));
+						if (!param.containsKey("operation")) {
+							operation = new HashMap<String, Object>();
+							operation.put("level", "gte");
+							param.put("operation", JsonUtils.toJson(operation));
+						}
+						
 					}
 
 				}

@@ -38,7 +38,7 @@
 	<classpathentry kind="lib" path="libs/spring4.2/spring-oxm-4.2.0.RELEASE.jar"/>
 	<classpathentry kind="lib" path="libs/spring4.2/spring-test-4.2.0.RELEASE.jar"/>
 	<classpathentry kind="lib" path="libs/spring4.2/spring-tx-4.2.0.RELEASE.jar"/>
-	<classpathentry kind="lib" path="libs/spring4.2/spring-web-4.2.0.RELEASE.jar"/>
+	<classpathentry kind="lib" path="libs/spring4.2/spring-web-4.2.0.RELEASE.jar" sourcepath="D:/maven/repository/org/springframework/spring-web/4.2.0.RELEASE/spring-web-4.2.0.RELEASE-sources.jar"/>
 	<classpathentry kind="lib" path="libs/spring4.2/spring-webmvc-4.2.0.RELEASE.jar"/>
 	<classpathentry kind="lib" path="libs/spring4.2/spring-webmvc-portlet-4.2.0.RELEASE.jar"/>
 	<classpathentry kind="lib" path="libs/spring4.2/spring-websocket-4.2.0.RELEASE.jar"/>

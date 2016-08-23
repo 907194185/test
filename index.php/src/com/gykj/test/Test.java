@@ -25,10 +25,16 @@ public class Test {
 		for(Entry<String, Integer> entry : list.get(0).entrySet()){
 			System.out.println(1111);
 		}*/
-		System.out.println(UUID.randomUUID().toString());
+		//System.out.println(UUID.randomUUID().toString());
 		
-		Logger logger = Logger.getLogger(Test.class);
-		logger.info("liuyongllllllllllllllllll");
+		//Logger logger = Logger.getLogger(Test.class);
+		//logger.info("liuyongllllllllllllllllll");
+		List<Map<String, Object>> list = new ArrayList<Map<String,Object>>();
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("a", "null");
+		map.put("b", null);
+		list.add(map);
+		System.out.println(JsonUtils.toJson(list));
 	}
 
 }

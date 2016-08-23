@@ -129,9 +129,9 @@ public class TcpCallable implements  Callable<Map<String, Object>>,TCPClienListe
 			param = TaskJsonUtils.joinContent(interfaceList.getCollection(), interfaceList.getAction(), param);		
 		}
 		log.setContent(JsonUtils.toJson(param));
-		log = this.logDao.insert(log);
+		//log = this.logDao.insert(log);
 		
-		param = TaskJsonUtils.joinTask(log.getId(), Constant.VALUE_LOCALHOST_TCP_NAME, log.getCreate_time(), taskType, param);	//传过去的tcpname，是本服务器的标认识		
+		param = TaskJsonUtils.joinTask("", Constant.VALUE_LOCALHOST_TCP_NAME, log.getCreate_time(), taskType, param);	//传过去的tcpname，是本服务器的标认识		
 		tackJson = JsonUtils.toJson(param);
 		System.out.println("发送数据："+tackJson);
 		//tcp请求

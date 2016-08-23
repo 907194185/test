@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ly.mapper.AccessTokenMapper">
+	
+	<select id="findAccessTokenByOne" parameterType="String" resultType="com.ly.pojo.AccessToken">
+		SELECT * FROM access_token WHERE platform_id = #{id}
+	</select>
+	
+	<insert id="insertAccessToken" parameterType="com.ly.pojo.AccessToken">
+		INSERT INTO access_token (platform_id,access_token,ticket,createtime) VALUE (#{platform_id},#{access_token},#{ticket},#{createtime})
+	</insert>
+	
+	<update id="updateAccessToken" parameterType="com.ly.pojo.AccessToken">
+		UPDATE access_token SET access_token=#{access_token},createtime=#{createtime} WHERE platform_id=#{platform_id}
+	</update>
+
+</mapper>

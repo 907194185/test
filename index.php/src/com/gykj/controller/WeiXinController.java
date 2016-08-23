@@ -1,6 +1,7 @@
 package com.gykj.controller;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import com.gykj.pojo.InterfaceList;
 import com.gykj.pojo.Log;
 import com.gykj.pojo.UserCache;
 import com.gykj.service.impl.InformationService;
+import com.gykj.utils.DateTimeUtil;
 import com.gykj.utils.HttpUtils;
 import com.gykj.utils.JsonUtils;
 import com.gykj.utils.WxUtils;
@@ -151,6 +153,8 @@ public class WeiXinController{
 		if ((basePath == null) || (basePath.trim().length() == 0)) {
 			return getError("图片保存路径不能为空");
 		}
+		String userName=(log.getU_name()==null?"":log.getU_name());
+		basePath=basePath+DateTimeUtil.formatDate(new Date(), "yyyy-MM-dd")+"_"+userName;
 		StringBuffer imageNameList = new StringBuffer();
 		if (imgUrlList != null) {
 			for (String imgUrl : imgUrlList)
