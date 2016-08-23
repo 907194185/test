@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+                     http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                     http://www.springframework.org/schema/context
+                     http://www.springframework.org/schema/context/spring-context-3.0.xsd
+                     http://www.springframework.org/schema/aop
+                     http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+                     http://www.springframework.org/schema/tx
+                     http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+                     http://www.springframework.org/schema/task 
+                     http://www.springframework.org/schema/task/spring-task-3.0.xsd"
+
+	default-autowire="byName">
+	<!-- spring组件扫描 -->
+	<context:component-scan base-package="com.ly">
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+	<!-- <import resource="mongo-config.xml" /> -->
+	<!-- <import resource="application_spring_cache.xml" /> -->
+	<!-- 引用数据库文件 -->
+	<bean id="configBean"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location">
+			<value>classpath:db/db.properties</value>
+		</property>
+	</bean>
+
+	<!-- 配置c3p0连接池 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<!-- 指定连接数据库的驱动 -->
+		<property name="driverClass" value="${jdbc.driver}" />
+		<!-- 指定连接数据库的URL -->
+		<property name="jdbcUrl" value="${jdbc.url}" />
+		<!-- 指定连接数据库的用户名 -->
+		<property name="user" value="${jdbc.username}" />
+		<!-- 指定连接数据库的密码 -->
+		<property name="password" value="${jdbc.password}" />
+		<!-- 指定连接池中保留的最大连接数. Default:15 -->
+		<property name="maxPoolSize" value="${jdbc.maxPoolSize}" />
+		<!-- 指定连接池中保留的最小连接数 -->
+		<property name="minPoolSize" value="${jdbc.minPoolSize}" />
+		<!-- 指定连接池的初始化连接数 取值应在minPoolSize 与 maxPoolSize 之间.Default:3 -->
+		<property name="initialPoolSize" value="${jdbc.initialPoolSize}" />
+		<!-- 最大空闲时间,60秒内未使用则连接被丢弃。若为0则永不丢弃。 Default:0 -->
+		<property name="maxIdleTime" value="${jdbc.maxIdleTime}" />
+		<!-- 当连接池中的连接耗尽的时候c3p0一次同时获取的连接数. Default:3 -->
+		<property name="acquireIncrement" value="${jdbc.acquireIncrement}" />
+		<!-- JDBC的标准,用以控制数据源内加载的PreparedStatements数量。 但由于预缓存的statements属于单个connection而不是整个连接池所以设置这个参数需要考虑到多方面的因数.如果maxStatements与maxStatementsPerConnection均为0,则缓存被关闭。Default:0 -->
+		<property name="maxStatements" value="${jdbc.maxStatements}" />
+		<!-- 每60秒检查所有连接池中的空闲连接.Default:0 -->
+		<property name="idleConnectionTestPeriod" value="${jdbc.idleConnectionTestPeriod}" />
+	</bean>
+
+	<!-- spring 整合mybatis -->
+	<bean id="sqlSessionFactory1" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="configLocation" value="classpath:mybatis/sqlMapConfig.xml"></property>
+	</bean>
+
+	<!-- 生成mapper接口代理对象 指定的映射器必须是一个接口,而 不是一个具体的实现类。mybatis配置文件不用再配置接口 缺点：就是系统有很多的配置文件时 
+		全部需要手动编写 -->
+	<!-- <bean id="userDaoMapper" class="org.mybatis.spring.mapper.MapperFactoryBean"> 
+		<property name="mapperInterface" value="com.ly.mapper.UserDaoMapper"></property> 
+		<property name="sqlSessionFactory" ref="sqlSessionFactory1"></property> </bean> -->
+
+	<!-- mapper接口自动扫描注入 注 意 , 没 有 必 要 去 指 定 SqlSessionFactory 或 SqlSessionTemplate 
+		, 因 为 MapperScannerConfigurer 将会创建 MapperFactoryBean,之后自动装配。 但是,如果你使 用了一个 
+		以上的 DataSource ,那 么自动 装配可 能会失效 。 这种 情况下 ,你可 以使用 sqlSessionFactoryBeanName 
+		或 sqlSessionTemplateBeanName 属性来设置正确的 bean 名 称来使用 注意：不能命名为sqlSesssionFactory。 
+		mybatis配置文件不用再配置接口 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.ly.mapper"></property>
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory1"></property>
+	</bean>
+
+	<!-- spring事务管理器 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- 注解事务管理配置 -->
+	<!-- <tx:annotation-driven transaction-manager="transactionManager"/> -->
+
+	<!-- -->
+	<tx:advice id="userTxAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="delete*" propagation="REQUIRED" read-only="false"
+				rollback-for="java.lang.Exception" no-rollback-for="java.lang.RuntimeException" />
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="insert*" propagation="REQUIRED" read-only="false"
+				rollback-for="java.lang.RuntimeException" />
+			<tx:method name="update*" propagation="REQUIRED" read-only="false"
+				rollback-for="java.lang.Exception" />
+
+			<tx:method name="find*" propagation="SUPPORTS" />
+			<tx:method name="get*" propagation="SUPPORTS" />
+			<tx:method name="select*" propagation="SUPPORTS" />
+		</tx:attributes>
+	</tx:advice>
+	<aop:config>
+		<aop:pointcut id="pc"
+			expression="execution(public * com.ly.service.*.*(..))" /> <!-- 把事务控制在Service层 -->
+		<aop:advisor pointcut-ref="pc" advice-ref="userTxAdvice" />
+	</aop:config>
+
+
+	<!-- 声明一个业务类 -->
+	<!-- <bean id="baseBusiness" class="com.ly.service.impl.BaseBusinessImpl" 
+		/> -->
+
+	<!-- 声明通知类 -->
+	<!-- <bean id="baseBefore" class="com.ly.advice.MyBeforeAdvice" />
+	<bean id="baseAfterReturn" class="com.ly.advice.MyAfterAdvice" /> -->
+	<!-- <bean id="baseAfterThrows" class="aop.base.advice.BaseAfterThrowsAdvice" 
+		/> -->
+	<!-- <bean id="baseAround" class="com.ly.advice.MyRoundAdvice" /> -->
+
+	<!-- 指定切点匹配类 -->
+	<!-- <bean id="pointcut" class="com.ly.pointcut.MyPointCut" /> -->
+
+	<!-- 包装通知，指定切点 -->
+	<!-- <bean id="matchBeforeAdvisor" class="org.springframework.aop.support.DefaultPointcutAdvisor"> 
+		<property name="pointcut"> <ref bean="pointcut" /> </property> <property 
+		name="advice"> <ref bean="baseBefore" /> </property> </bean> -->
+
+	<!-- 包含切点的切面 正则表达式 -->
+	<!-- <bean id="myadvisor" class="org.springframework.aop.support.RegexpMethodPointcutAdvisor"> 
+		<property name="pattern" value="com.ly.service.BaseBusiness.delete"></property> 
+		<property name="advice" ref="baseAround"></property> </bean> -->
+
+	<!-- 使用ProxyFactoryBean 产生代理对象 -->
+	<!-- <bean id="baseBusinessProxy" class="org.springframework.aop.framework.ProxyFactoryBean"> 
+		代理目标对象 <property name="target" ref="baseBusiness"></property> 代理对象多实现的接口 
+		<property name="proxyInterfaces" value="com.ly.service.BaseBusiness"></property> 
+		代理对象所应用的增强 <property name="interceptorNames" value="myadvisor"> <list> <value>baseBefore</value> 
+		<value>baseAfterReturn</value> <value>baseAround</value> </list> </property> 
+		</bean> -->
+
+	<!-- aspectj注解aop实现 -->
+	<!-- <aop:aspectj-autoproxy proxy-target-class="true"></aop:aspectj-autoproxy> -->
+
+
+	<!-- aspectj基于xml配置的实现 -->
+	<!-- 切面 -->
+	<!-- <bean id="aspect" class="com.ly.aspect.MyAspectXml"></bean>
+	<aop:config>
+		<aop:aspect id="myaspect" ref="aspect">
+			<aop:pointcut
+				expression="execution(* com.ly.service.impl.BaseBusinessImpl.delete(..))"
+				id="mypointcut" />
+			<aop:after method="after" pointcut-ref="mypointcut" />
+		</aop:aspect>
+	</aop:config> -->
+
+	<!-- 文件上传 -->
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="defaultEncoding" value="utf-8"></property>
+	</bean>
+
+
+	<!-- spring自带定时任务xml配置 -->
+	<!-- <bean id="myTaskForXml" class="com.ly.task.MyTaskForXml"></bean> <task:scheduled-tasks> 
+		<task:scheduled ref="myTaskForXml" method="show" cron="*/5 * * * * ?"/> <task:scheduled 
+		ref="myTaskForXml" method="print" cron="*/10 * * * * ?"/> </task:scheduled-tasks> -->
+	<!-- spring自带定时任务注解配置 -->
+	<task:annotation-driven scheduler="myScheduler" />
+	<task:scheduler id="myScheduler" pool-size="5" />
+
+	<bean id="captchaProducer" class="com.google.code.kaptcha.impl.DefaultKaptcha">
+		<property name="config">
+			<bean class="com.google.code.kaptcha.util.Config">
+				<constructor-arg>
+					<props>
+						<prop key="kaptcha.border">yes</prop>
+						<prop key="kaptcha.border.color">105,179,90</prop>
+						<prop key="kaptcha.textproducer.font.color">blue</prop>
+						<prop key="kaptcha.image.width">125</prop>
+						<prop key="kaptcha.image.height">45</prop>
+						<prop key="kaptcha.textproducer.font.size">45</prop>
+						<prop key="kaptcha.session.key">code</prop>
+						<prop key="kaptcha.textproducer.char.length">4</prop>
+						<prop key="kaptcha.textproducer.font.names">宋体,楷体,微软雅黑</prop>
+					</props>
+				</constructor-arg>
+			</bean>
+		</property>
+	</bean>
+
+</beans>

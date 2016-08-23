@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd   
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd   
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd   
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+         
+http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+	<!-- 声明式配置controller -->
+	<!-- 使用非注解BeanNameUrlHandlerMapping映射器 -->
+	<!-- <bean name="/hello" class="com.ly.controller.UserController"> </bean> -->
+
+	<!-- 使用非注解SimpleUrlHandlerMapping映射器 -->
+	<!-- <bean id="userController2" class="com.ly.controller.UserController2"> 
+		</bean> -->
+
+	<!-- 使用注解RequestMappingHandlerMapping映射器 -->
+	<!-- <bean class="com.ly.controller.AnnotationController"> </bean> -->
+
+	<!-- 扫描注解配置的Controller -->
+	<context:component-scan base-package="com.ly.controller">
+		<context:include-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+
+
+	<!-- 非注解处理器映射器配置 -->
+	<!-- 根据controller 的ID值进行映射 -->
+	<!-- <bean class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping"> 
+		<property name="mappings"> <props> <prop key="/user2">userController2</prop> 
+		<prop key="/user2">userController2</prop> </props> </property> </bean> -->
+
+	<!-- 根据controller 的name值进行映射 -->
+	<bean
+		class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping">
+
+	</bean>
+
+	<!-- 注解处理器映射器配置 3.1前使用org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping -->
+	<bean
+		class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping" />
+
+
+
+
+	<!-- 非注解处理器适配器配置 -->
+	<!-- 要求Handler实现Controller接口 默认 -->
+	<!-- <bean class="org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter"></bean> -->
+
+	<!-- 要求Handler实现HttpRequestHandler接口 -->
+	<!-- <bean class="org.springframework.web.servlet.mvc.HttpRequestHandlerAdapter"></bean> -->
+
+
+	<!-- 注解处理器适配器配置 3.1以前用org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter -->
+	<bean
+		class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+		<property name="messageConverters">
+			<list>
+				<bean
+					class="org.springframework.http.converter.StringHttpMessageConverter">
+					<!-- 这里为了处理ajax 请求的乱码 -->
+					<property name="supportedMediaTypes">
+						<list>
+							<value>text/plain;charset=UTF-8</value>
+						</list>
+					</property>
+				</bean>
+			</list>
+		</property>
+	</bean>
+
+
+
+	<!-- 配置试图解析器 -->
+	<bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/jsp/"></property>
+		<property name="suffix" value=".jsp"></property>
+
+	</bean>
+
+	<!-- 配置springmvc 不拦截静态文件 -->
+	<mvc:annotation-driven />
+	<mvc:resources location="icon/" mapping="icon/**" />
+	<mvc:resources location="/css/" mapping="/css/**" />
+	<mvc:resources location="/js/" mapping="/js/**" />
+	<mvc:resources location="/html/" mapping="/html/**" />
+</beans>
